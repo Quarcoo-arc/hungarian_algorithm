@@ -14,8 +14,7 @@ async def generate_word_solution():
 
 @app.post("/assignment-problem", response_model=SolutionRead)
 def solve_assignment_problem(matrix_data: AssignmentMatrixInfo):
-    results = solve_problem(matrix_data)
-    return results
+    return solve_problem(matrix_data)
 
 
 if __name__ == "__main__":
