@@ -1,5 +1,9 @@
+from typing import List
+
+
 class HungarianError(Exception):
     pass
+
 
 # Import numpy. Error if fails
 try:
@@ -44,7 +48,12 @@ class Hungarian:
             matrix_size = max(self._maxColumn, self._maxRow)
             pad_columns = matrix_size - self._maxRow
             pad_rows = matrix_size - self._maxColumn
-            my_matrix = np.pad(my_matrix, ((0,pad_columns),(0,pad_rows)), 'constant', constant_values=(0))
+            my_matrix = np.pad(
+                my_matrix,
+                ((0, pad_columns), (0, pad_rows)),
+                "constant",
+                constant_values=(0),
+            )
 
             # Convert matrix to cost matrix if necessary
             if is_profit_matrix:
@@ -54,6 +63,7 @@ class Hungarian:
             self._cost_matrix = my_matrix
             self._size = len(my_matrix)
             self._shape = my_matrix.shape
+            self._iterations = []
 
             # Results from algorithm.
             self._results = []
@@ -68,6 +78,19 @@ class Hungarian:
     def get_total_potential(self):
         """Returns expected value after calculation."""
         return self._totalPotential
+
+    def get_output(self):
+        """
+        Return all the data you need in a dictionary.
+        This data can be sent in an api request
+        """
+        return {
+            "results": self.get_results(),
+            "total_cost": self.get_total_potential(),
+            "row_reduction": self._row_reduction.tolist(),
+            "column_reduction": self._column_reduction.tolist(),
+            "iterations": self._iterations,
+        }
 
     def calculate(self, input_matrix=None, is_profit_matrix=False):
         """
@@ -87,36 +110,45 @@ class Hungarian:
         for index, row in enumerate(result_matrix):
             result_matrix[index] -= row.min()
 
-        print("After row reduction\n", result_matrix)
+        self._row_reduction = result_matrix
 
         # Step 2: Subtract column mins from each column.
         for index, column in enumerate(result_matrix.T):
             result_matrix[:, index] -= column.min()
-        
-        print("After column reduction\n", result_matrix)
 
+        self._column_reduction = result_matrix
         # Step 3: Use minimum number of lines to cover all zeros in the matrix.
         # If the total covered rows+columns is not equal to the matrix size then adjust matrix and repeat.
         total_covered = 0
         while total_covered < self._size:
             # Find minimum number of lines to cover all zeros in the matrix and find total covered rows and columns.
             cover_zeros = CoverZeros(result_matrix)
-            covered_rows = cover_zeros.get_covered_rows()
-            covered_columns = cover_zeros.get_covered_columns()
+            covered_rows: List[int] = cover_zeros.get_covered_rows()
+            covered_columns: List[int] = cover_zeros.get_covered_columns()
             total_covered = len(covered_rows) + len(covered_columns)
 
-            print("Next table\n", result_matrix)
+            self._iterations.append(
+                {
+                    "initial_matrix": result_matrix.tolist(),
+                    "covered_rows": covered_rows,
+                    "covered_columns": covered_columns,
+                    "total_covered": total_covered,
+                }
+            )
+
+            # print("Next table\n", result_matrix)
 
             # if the total covered rows+columns is not equal to the matrix size then adjust it by min uncovered num (m).
             if total_covered < self._size:
-                result_matrix = self._adjust_matrix_by_min_uncovered_num(result_matrix, covered_rows, covered_columns)
+                result_matrix = self._adjust_matrix_by_min_uncovered_num(
+                    result_matrix, covered_rows, covered_columns
+                )
         # Step 4: Starting with the top row, work your way downwards as you make assignments.
         # Find single zeros in rows or columns.
         # Add them to final result and remove them and their associated row/column from the matrix.
         expected_results = min(self._maxColumn, self._maxRow)
-        zero_locations = (result_matrix == 0)
+        zero_locations = result_matrix == 0
         while len(self._results) != expected_results:
-
             # If number of zeros in the matrix is zero before finding all the results then an error has occurred.
             if not zero_locations.any():
                 raise HungarianError("Unable to find results. Algorithm has failed.")
@@ -127,7 +159,9 @@ class Hungarian:
             # Make arbitrary selection
             total_matched = len(matched_rows) + len(matched_columns)
             if total_matched == 0:
-                matched_rows, matched_columns = self.select_arbitrary_match(zero_locations)
+                matched_rows, matched_columns = self.select_arbitrary_match(
+                    zero_locations
+                )
 
             # Delete rows and columns
             for row in matched_rows:
@@ -156,8 +190,9 @@ class Hungarian:
         cost_matrix = offset_matrix - profit_matrix
         return cost_matrix
 
-    
-    def _adjust_matrix_by_min_uncovered_num(self, result_matrix, covered_rows, covered_columns):
+    def _adjust_matrix_by_min_uncovered_num(
+        self, result_matrix, covered_rows, covered_columns
+    ):
         """Subtract m from every uncovered number and add m to every element covered with two lines."""
         # Calculate minimum uncovered number (m)
         elements = []
@@ -191,17 +226,19 @@ class Hungarian:
         for index, row in enumerate(zero_locations):
             row_index = np.array([index])
             if np.sum(row) == 1:
-                column_index, = np.where(row)
-                marked_rows, marked_columns = self.__mark_rows_and_columns(marked_rows, marked_columns, row_index,
-                                                                           column_index)
+                (column_index,) = np.where(row)
+                marked_rows, marked_columns = self.__mark_rows_and_columns(
+                    marked_rows, marked_columns, row_index, column_index
+                )
 
         # Iterate over columns
         for index, column in enumerate(zero_locations.T):
             column_index = np.array([index])
             if np.sum(column) == 1:
-                row_index, = np.where(column)
-                marked_rows, marked_columns = self.__mark_rows_and_columns(marked_rows, marked_columns, row_index,
-                                                                           column_index)
+                (row_index,) = np.where(column)
+                marked_rows, marked_columns = self.__mark_rows_and_columns(
+                    marked_rows, marked_columns, row_index, column_index
+                )
 
         return marked_rows, marked_columns
 
@@ -210,9 +247,14 @@ class Hungarian:
         """Check if column or row is marked. If not marked then mark it."""
         new_marked_rows = marked_rows
         new_marked_columns = marked_columns
-        if not (marked_rows == row_index).any() and not (marked_columns == column_index).any():
+        if (
+            not (marked_rows == row_index).any()
+            and not (marked_columns == column_index).any()
+        ):
             new_marked_rows = np.insert(marked_rows, len(marked_rows), row_index)
-            new_marked_columns = np.insert(marked_columns, len(marked_columns), column_index)
+            new_marked_columns = np.insert(
+                marked_columns, len(marked_columns), column_index
+            )
         return new_marked_rows, new_marked_columns
 
     @staticmethod
@@ -222,7 +264,9 @@ class Hungarian:
         rows, columns = np.where(zero_locations)
         zero_count = []
         for index, row in enumerate(rows):
-            total_zeros = np.sum(zero_locations[row]) + np.sum(zero_locations[:, columns[index]])
+            total_zeros = np.sum(zero_locations[row]) + np.sum(
+                zero_locations[:, columns[index]]
+            )
             zero_count.append(total_zeros)
 
         # Get the row column combination with the minimum number of zeros.
@@ -255,7 +299,7 @@ class CoverZeros:
         Run calculation procedure to generate results.
         """
         # Find zeros in matrix
-        self._zero_locations = (matrix == 0)
+        self._zero_locations = matrix == 0
         self._shape = matrix.shape
 
         # Choices starts without any choices made.
@@ -273,12 +317,10 @@ class CoverZeros:
 
     def get_covered_rows(self):
         """Return list of covered rows."""
-        print("Number of covered rows ", self._covered_rows)
         return self._covered_rows
 
     def get_covered_columns(self):
         """Return list of covered columns."""
-        print("Number of covered columns ", self._covered_columns)
         return self._covered_columns
 
     def __calculate(self):
@@ -337,8 +379,10 @@ class CoverZeros:
                 new_choice_column_index = None
                 if choice_row_index is None:
                     # Find a good row to accomodate swap. Find its column pair.
-                    choice_row_index, new_choice_column_index = \
-                        self.__find_best_choice_row_and_new_column(choice_column_index)
+                    (
+                        choice_row_index,
+                        new_choice_column_index,
+                    ) = self.__find_best_choice_row_and_new_column(choice_column_index)
 
                     # Delete old choice.
                     self._choices[choice_row_index, new_choice_column_index] = False
@@ -355,8 +399,10 @@ class CoverZeros:
         for index, column in enumerate(self._zero_locations.T):
             if index not in self._marked_columns:
                 if column.any():
-                    row_indices, = np.where(column)
-                    zeros_in_marked_rows = (set(self._marked_rows) & set(row_indices)) != set([])
+                    (row_indices,) = np.where(column)
+                    zeros_in_marked_rows = (
+                        set(self._marked_rows) & set(row_indices)
+                    ) != set([])
                     if zeros_in_marked_rows:
                         self._marked_columns.append(index)
                         num_marked_columns += 1
@@ -368,7 +414,7 @@ class CoverZeros:
         for index, row in enumerate(self._choices):
             if index not in self._marked_rows:
                 if row.any():
-                    column_index, = np.where(row)
+                    (column_index,) = np.where(row)
                     if column_index in self._marked_columns:
                         self._marked_rows.append(index)
                         num_marked_rows += 1
@@ -388,11 +434,12 @@ class CoverZeros:
                 return column_index
 
         raise HungarianError(
-            "Could not find a column without a choice. Failed to cover matrix zeros. Algorithm has failed.")
+            "Could not find a column without a choice. Failed to cover matrix zeros. Algorithm has failed."
+        )
 
     def __find_row_without_choice(self, choice_column_index):
         """Find a row without a choice in it for the column indexed. If a row does not exist then return None."""
-        row_indices, = np.where(self._zero_locations[:, choice_column_index])
+        (row_indices,) = np.where(self._zero_locations[:, choice_column_index])
         for row_index in row_indices:
             if not self._choices[row_index].any():
                 return row_index
@@ -405,9 +452,9 @@ class CoverZeros:
         Find a row index to use for the choice so that the column that needs to be changed is optimal.
         Return a random row and column if unable to find an optimal selection.
         """
-        row_indices, = np.where(self._zero_locations[:, choice_column_index])
+        (row_indices,) = np.where(self._zero_locations[:, choice_column_index])
         for row_index in row_indices:
-            column_indices, = np.where(self._choices[row_index])
+            (column_indices,) = np.where(self._choices[row_index])
             column_index = column_indices[0]
             if self.__find_row_without_choice(column_index) is not None:
                 return row_index, column_index
@@ -416,11 +463,11 @@ class CoverZeros:
         from random import shuffle
 
         shuffle(row_indices)
-        column_index, = np.where(self._choices[row_indices[0]])
+        (column_index,) = np.where(self._choices[row_indices[0]])
         return row_indices[0], column_index[0]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # profit_matrix = [
     #     [62, 75, 80, 93, 95, 97],
     #     [75, 80, 82, 85, 71, 97],
@@ -435,18 +482,15 @@ if __name__ == '__main__':
     # print("Results:\n\t", hungarian.get_results())
     # print("-" * 80)
 
-    cost_matrix = [
-        [10, 15, 16, 18],
-        [14, 13, 16, 10],
-        [11, 9, 8, 18],
-        [13, 13, 11, 9]]
+    cost_matrix = [[10, 15, 16, 18], [14, 13, 16, 10], [11, 9, 8, 18], [13, 13, 11, 9]]
     print(cost_matrix)
     hungarian = Hungarian(cost_matrix)
-    print('calculating...')
+    print("calculating...")
     hungarian.calculate()
-    print("Calculated value:\t", hungarian.get_total_potential())  # = 12
-    print("Results:\n\t", hungarian.get_results())
-    print("-" * 80)
+    # print("Calculated value:\t", hungarian.get_total_potential())  # = 12
+    # print("Results:\n\t", hungarian.get_results())
+    # print("-" * 80)
+    print(hungarian.get_output())
 
     # profit_matrix = [
     #     [62, 75, 80, 93, 0, 97],
