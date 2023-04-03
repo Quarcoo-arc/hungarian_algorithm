@@ -167,5 +167,4 @@ setup.cfg
 
 nohup.out
 *.rest
-*.json
 test.py
