@@ -8,7 +8,13 @@ app = FastAPI(title="Hungarian Algorithm API", version="0.1.0")
 
 
 @app.post("/document")
-async def generate_word_solution(solution: SolutionRead):
+async def generate_word_solution():
+    """
+    Generate a word document containing the solution to the
+    Assignment problem.
+
+    Not Yet Implemented.
+    """
     ...
 
 
