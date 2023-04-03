@@ -71,6 +71,10 @@ class Hungarian:
         else:
             self._cost_matrix = None
 
+    def get_cost_matrix(self):
+        """Get the cost matrix used for the calculations"""
+        return self._cost_matrix
+
     def get_results(self):
         """Get results after calculation."""
         return self._results
@@ -90,6 +94,7 @@ class Hungarian:
             "row_reduction": self._row_reduction.tolist(),
             "column_reduction": self._column_reduction.tolist(),
             "iterations": self._iterations,
+            "cost_matrix": self.get_cost_matrix().tolist(),
         }
 
     def calculate(self, input_matrix=None, is_profit_matrix=False):
