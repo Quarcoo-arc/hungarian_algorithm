@@ -8,8 +8,8 @@ app = FastAPI(title="Hungarian Algorithm API", version="0.1.0")
 
 
 @app.post("/document")
-async def generate_word_solution():
-    pass
+async def generate_word_solution(solution: SolutionRead):
+    ...
 
 
 @app.post("/assignment-problem", response_model=SolutionRead)
