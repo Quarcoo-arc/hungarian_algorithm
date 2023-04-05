@@ -57,7 +57,23 @@ function App() {
     setMatrices(data);
   };
 
-  const solveProblem = (e) => {
+  const fetchResults = async (matrix) => {
+    console.log(matrix);
+    const result = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/assignment-problem`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ matrix: matrix }),
+      }
+    );
+    const data = await result.json();
+    return data;
+  };
+
+  const solveProblem = async (e) => {
     e.preventDefault();
     let arr = [];
     for (let i = numCols + 2; i < e.target.elements.length - 1; i++) {
@@ -69,6 +85,8 @@ function App() {
 
     let matrix = [];
     while (arr.length) matrix.push(arr.splice(0, numCols));
+    const results = await fetchResults(matrix);
+    console.log(results);
   };
 
   return (
