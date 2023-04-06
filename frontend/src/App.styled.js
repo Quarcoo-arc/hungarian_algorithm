@@ -8,12 +8,19 @@ const Title = styled.h1`
 const Form = styled.form`
   margin: 1rem auto 4rem;
   display: flex;
-  flex-direction: ${(props) => (props.column ? "column" : "row")};
+  flex-direction: column;
   gap: 1.5rem 2rem;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
+
   span {
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem 2rem;
+  }
+
+  span span {
     display: flex;
     flex-direction: row;
     gap: 0.5rem;

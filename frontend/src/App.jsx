@@ -17,6 +17,8 @@ function App() {
   const [matrices, setMatrices] = useState([]);
   const [actualMatrix, setActualMatrix] = useState([]);
   const [result, setResult] = useState({});
+  const [rowHeading, setRowHeading] = useState("Operator");
+  const [columnHeading, setColumnHeading] = useState("Operation");
 
   const generateMatrix = (e) => {
     e.preventDefault();
@@ -41,7 +43,8 @@ function App() {
               key={`${i}-${j}`}
               id={`${i}-${j}`}
               type="text"
-              defaultValue={`Operation ${j}`}
+              value={`${columnHeading} ${j}`}
+              readOnly={true}
             />
           );
         } else if (j === 0) {
@@ -50,7 +53,8 @@ function App() {
               key={`${i}-${j}`}
               id={`${i}-${j}`}
               type="text"
-              defaultValue={`Operator ${i}`}
+              value={`${rowHeading} ${i}`}
+              readOnly={true}
             />
           );
         } else {
@@ -70,7 +74,6 @@ function App() {
   };
 
   const fetchResults = async (matrix) => {
-    console.log(matrix);
     const result = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/assignment-problem`,
       {
@@ -100,7 +103,6 @@ function App() {
     setActualMatrix(matrix);
     const results = await fetchResults(matrix);
     setResult(results);
-    console.log(results);
   };
 
   return (
@@ -108,28 +110,52 @@ function App() {
       <Title>Hungarian Algorithm</Title>
       <Form onSubmit={generateMatrix}>
         <span>
-          <label htmlFor="num_rows">Number of rows:</label>
-          <InputField
-            short
-            type="number"
-            name="num_rows"
-            id="num_rows"
-            value={numRows}
-            min={1}
-            onChange={(e) => setNumRows(+e.target.value)}
-          />
+          <span>
+            <label htmlFor="row_heading">Row Heading:</label>
+            <InputField
+              type="text"
+              name="row_heading"
+              id="row_heading"
+              value={rowHeading}
+              onChange={(e) => setRowHeading(e.target.value)}
+            />
+          </span>
+          <span>
+            <label htmlFor="column_heading">Column Heading:</label>
+            <InputField
+              type="text"
+              name="column_heading"
+              id="column_heading"
+              value={columnHeading}
+              onChange={(e) => setColumnHeading(e.target.value)}
+            />
+          </span>
         </span>
         <span>
-          <label htmlFor="num_cols">Number of colums:</label>
-          <InputField
-            short
-            type="number"
-            name="num_cols"
-            id="num_cols"
-            value={numCols}
-            min={1}
-            onChange={(e) => setNumCols(+e.target.value)}
-          />
+          <span>
+            <label htmlFor="num_rows">Number of rows:</label>
+            <InputField
+              short
+              type="number"
+              name="num_rows"
+              id="num_rows"
+              value={numRows}
+              min={1}
+              onChange={(e) => setNumRows(+e.target.value)}
+            />
+          </span>
+          <span>
+            <label htmlFor="num_cols">Number of colums:</label>
+            <InputField
+              short
+              type="number"
+              name="num_cols"
+              id="num_cols"
+              value={numCols}
+              min={1}
+              onChange={(e) => setNumCols(+e.target.value)}
+            />
+          </span>
         </span>
         <Button type="submit">Generate Table</Button>
       </Form>
@@ -159,7 +185,7 @@ function App() {
               <TileDeck matrix={result.row_reduction} />
             </span>
             {result.iterations.map((it, idx) => (
-              <span>
+              <span key={idx}>
                 <h4>Iteration {idx + 1}</h4>
                 <TileDeck
                   matrix={it.initial_matrix}
@@ -171,7 +197,12 @@ function App() {
           </ResultContainer>
           <SectionWrapper>
             <Heading>Optimal Assignment</Heading>
-            <Table actualMatrix={actualMatrix} results={result.results} />
+            <Table
+              rowHeading={rowHeading}
+              colHeading={columnHeading}
+              actualMatrix={actualMatrix}
+              results={result.results}
+            />
             <p>Total Cost: {result.total_cost}</p>
           </SectionWrapper>
         </>

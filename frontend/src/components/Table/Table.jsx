@@ -1,21 +1,25 @@
 import React from "react";
 import { TableEl } from "./Table.styled";
 
-const Table = ({ results, actualMatrix }) => {
+const Table = ({ results, actualMatrix, rowHeading, colHeading }) => {
   return (
     <TableEl>
-      <tr>
-        <th>Operator</th>
-        <th>Operation</th>
-        <th>Cost</th>
-      </tr>
-      {results.map((row, idx) => (
-        <tr key={idx}>
-          <td>{row[0]}</td>
-          <td>{row[1]}</td>
-          <td>{actualMatrix[row[0]][row[1]]}</td>
+      <thead>
+        <tr>
+          <th>{rowHeading}</th>
+          <th>{colHeading}</th>
+          <th>Cost</th>
         </tr>
-      ))}
+      </thead>
+      <tbody>
+        {results.map((row, idx) => (
+          <tr key={idx}>
+            <td>{row[0] + 1}</td>
+            <td>{row[1] + 1} </td>
+            <td>{actualMatrix[row[0]][row[1]]}</td>
+          </tr>
+        ))}
+      </tbody>
     </TableEl>
   );
 };
