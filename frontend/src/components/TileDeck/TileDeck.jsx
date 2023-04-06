@@ -10,7 +10,7 @@ const TileDeck = ({
   return (
     <Col>
       {matrix.map((row, ridx) => (
-        <Row>
+        <Row key={ridx}>
           {row.map((el, cidx) => (
             <Tile
               key={`${ridx}-${cidx}`}
