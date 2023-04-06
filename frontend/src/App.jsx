@@ -1,6 +1,15 @@
 import { useState } from "react";
 import "./App.css";
-import { Tile, TileDeck } from "./components";
+import { Table, TileDeck, Button } from "./components";
+import {
+  Form,
+  Heading,
+  InputField,
+  InputWrapper,
+  ResultContainer,
+  SectionWrapper,
+  Title,
+} from "./App.styled";
 
 function App() {
   const [numRows, setNumRows] = useState(1);
@@ -94,75 +103,77 @@ function App() {
     console.log(results);
   };
 
-  console.log(result.column_reduction);
-
   return (
     <div>
-      <h1>Hungarian Algorithm</h1>
-      <form onSubmit={generateMatrix}>
-        <p>Enter the number of rows:</p>
-        <input
-          type="number"
-          name="num_rows"
-          id="num_rows"
-          value={numRows}
-          min={1}
-          onChange={(e) => setNumRows(+e.target.value)}
-        />
-        <p>Enter the number of colums:</p>
-        <input
-          type="number"
-          name="num_cols"
-          id="num_cols"
-          value={numCols}
-          min={1}
-          onChange={(e) => setNumCols(+e.target.value)}
-        />
-        <button type="submit">Submit</button>
-      </form>
+      <Title>Hungarian Algorithm</Title>
+      <Form onSubmit={generateMatrix}>
+        <span>
+          <label htmlFor="num_rows">Number of rows:</label>
+          <InputField
+            short
+            type="number"
+            name="num_rows"
+            id="num_rows"
+            value={numRows}
+            min={1}
+            onChange={(e) => setNumRows(+e.target.value)}
+          />
+        </span>
+        <span>
+          <label htmlFor="num_cols">Number of colums:</label>
+          <InputField
+            short
+            type="number"
+            name="num_cols"
+            id="num_cols"
+            value={numCols}
+            min={1}
+            onChange={(e) => setNumCols(+e.target.value)}
+          />
+        </span>
+        <Button type="submit">Generate Table</Button>
+      </Form>
       <div>
         {matrices && matrices.length ? (
-          <form onSubmit={solveProblem}>
-            {matrices.map((row, idx) => (
-              <div key={idx}>{row.map((col) => col)}</div>
-            ))}
+          <Form column onSubmit={solveProblem}>
+            <Heading>Cost Table for Assignment</Heading>
+            <InputWrapper>
+              {matrices.map((row, idx) => (
+                <div key={idx}>{row.map((col) => col)}</div>
+              ))}
+            </InputWrapper>
 
-            <button type="submit">Solve Problem</button>
-          </form>
+            <Button type="submit">Solve Problem</Button>
+          </Form>
         ) : null}
       </div>
       {Object.keys(result).length ? (
         <>
-          <h4>Column Reductions</h4>
-          <TileDeck matrix={result.column_reduction} />
-          <h4>Row Reductions</h4>
-          <TileDeck matrix={result.row_reduction} />
-          {result.iterations.map((it, idx) => (
-            <>
-              <h4>Iteration {idx + 1}</h4>
-              <TileDeck
-                matrix={it.initial_matrix}
-                crossedCols={new Set(it.covered_columns)}
-                crossedRows={new Set(it.covered_rows)}
-              />
-            </>
-          ))}
-          <h4>Optimal Assignment</h4>
-          <table>
-            <thead>
-              <td>Operator</td>
-              <td>Operation</td>
-              <td>Cost</td>
-            </thead>
-            {result.results.map((row) => (
-              <tr>
-                <td>{row[0]}</td>
-                <td>{row[1]}</td>
-                <td>{actualMatrix[row[0]][row[1]]}</td>
-              </tr>
+          <ResultContainer>
+            <span>
+              <h4>Column Reductions</h4>
+              <TileDeck matrix={result.column_reduction} />
+            </span>
+            <span>
+              <h4>Row Reductions</h4>
+              <TileDeck matrix={result.row_reduction} />
+            </span>
+            {result.iterations.map((it, idx) => (
+              <span>
+                <h4>Iteration {idx + 1}</h4>
+                <TileDeck
+                  matrix={it.initial_matrix}
+                  crossedCols={new Set(it.covered_columns)}
+                  crossedRows={new Set(it.covered_rows)}
+                />
+              </span>
             ))}
-          </table>
-          <p>Total Cost: {result.total_cost}</p>
+          </ResultContainer>
+          <SectionWrapper>
+            <Heading>Optimal Assignment</Heading>
+            <Table actualMatrix={actualMatrix} results={result.results} />
+            <p>Total Cost: {result.total_cost}</p>
+          </SectionWrapper>
         </>
       ) : null}
     </div>
