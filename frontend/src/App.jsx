@@ -6,6 +6,7 @@ function App() {
   const [numRows, setNumRows] = useState(1);
   const [numCols, setNumCols] = useState(1);
   const [matrices, setMatrices] = useState([]);
+  const [actualMatrix, setActualMatrix] = useState([]);
   const [result, setResult] = useState({});
 
   const generateMatrix = (e) => {
@@ -87,6 +88,7 @@ function App() {
 
     let matrix = [];
     while (arr.length) matrix.push(arr.splice(0, numCols));
+    setActualMatrix(matrix);
     const results = await fetchResults(matrix);
     setResult(results);
     console.log(results);
@@ -145,6 +147,22 @@ function App() {
               />
             </>
           ))}
+          <h4>Optimal Assignment</h4>
+          <table>
+            <thead>
+              <td>Operator</td>
+              <td>Operation</td>
+              <td>Cost</td>
+            </thead>
+            {result.results.map((row) => (
+              <tr>
+                <td>{row[0]}</td>
+                <td>{row[1]}</td>
+                <td>{actualMatrix[row[0]][row[1]]}</td>
+              </tr>
+            ))}
+          </table>
+          <p>Total Cost: {result.total_cost}</p>
         </>
       ) : null}
     </div>
