@@ -19,6 +19,7 @@ function App() {
   const [result, setResult] = useState({});
   const [rowHeading, setRowHeading] = useState("Operator");
   const [columnHeading, setColumnHeading] = useState("Operation");
+  const [matrixType, setMatrixType] = useState("Cost");
 
   const generateMatrix = (e) => {
     e.preventDefault();
@@ -81,7 +82,10 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ matrix: matrix }),
+        body: JSON.stringify({
+          matrix: matrix,
+          is_profit_matrix: matrixType === "Profit" ? true : false,
+        }),
       }
     );
     const data = await result.json();
@@ -157,12 +161,36 @@ function App() {
             />
           </span>
         </span>
+        <span>
+          <p>Type of Matrix:</p>
+          <span>
+            <label htmlFor="profit">Profit</label>
+            <input
+              type="radio"
+              name="matrix_type"
+              value="Profit"
+              id="profit"
+              onChange={(e) => setMatrixType(e.target.value)}
+            />
+          </span>
+          <span>
+            <label htmlFor="cost">Cost</label>
+            <input
+              defaultChecked
+              type="radio"
+              name="matrix_type"
+              value="Cost"
+              id="cost"
+              onChange={(e) => setMatrixType(e.target.value)}
+            />
+          </span>
+        </span>
         <Button type="submit">Generate Table</Button>
       </Form>
       <div>
         {matrices && matrices.length ? (
           <Form column onSubmit={solveProblem}>
-            <Heading>Cost Table for Assignment</Heading>
+            <Heading>{matrixType} Table for Assignment</Heading>
             <InputWrapper>
               {matrices.map((row, idx) => (
                 <div key={idx}>{row.map((col) => col)}</div>
@@ -176,6 +204,12 @@ function App() {
       {Object.keys(result).length ? (
         <>
           <ResultContainer>
+            {matrixType === "Profit" ? (
+              <span>
+                <h4>Cost Table</h4>
+                <TileDeck matrix={result.cost_matrix} />
+              </span>
+            ) : null}
             <span>
               <h4>Column Reductions</h4>
               <TileDeck matrix={result.column_reduction} />
@@ -202,8 +236,11 @@ function App() {
               colHeading={columnHeading}
               actualMatrix={actualMatrix}
               results={result.results}
+              isProfitRelated={matrixType === "Profit" ? true : false}
             />
-            <p>Total Cost: {result.total_cost}</p>
+            <p>
+              Total {matrixType}: {result.total_cost}
+            </p>
           </SectionWrapper>
         </>
       ) : null}
