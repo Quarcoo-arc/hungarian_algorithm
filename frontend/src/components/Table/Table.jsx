@@ -1,14 +1,20 @@
 import React from "react";
 import { TableEl } from "./Table.styled";
 
-const Table = ({ results, actualMatrix, rowHeading, colHeading }) => {
+const Table = ({
+  results,
+  actualMatrix,
+  rowHeading,
+  colHeading,
+  isProfitRelated,
+}) => {
   return (
     <TableEl>
       <thead>
         <tr>
           <th>{rowHeading}</th>
           <th>{colHeading}</th>
-          <th>Cost</th>
+          <th>{isProfitRelated ? "Profit" : "Cost"}</th>
         </tr>
       </thead>
       <tbody>
