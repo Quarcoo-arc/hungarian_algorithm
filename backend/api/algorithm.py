@@ -112,16 +112,17 @@ class Hungarian:
         result_matrix = self._cost_matrix.copy()
 
         # Step 1: Subtract row mins from each row.
+
         for index, row in enumerate(result_matrix):
             result_matrix[index] -= row.min()
 
-        self._row_reduction = result_matrix
+        self._row_reduction = result_matrix.copy()
 
         # Step 2: Subtract column mins from each column.
         for index, column in enumerate(result_matrix.T):
             result_matrix[:, index] -= column.min()
 
-        self._column_reduction = result_matrix
+        self._column_reduction = result_matrix.copy()
         # Step 3: Use minimum number of lines to cover all zeros in the matrix.
         # If the total covered rows+columns is not equal to the matrix size then adjust matrix and repeat.
         total_covered = 0
@@ -134,7 +135,7 @@ class Hungarian:
 
             self._iterations.append(
                 {
-                    "initial_matrix": result_matrix.tolist(),
+                    "initial_matrix": result_matrix.copy().tolist(),
                     "covered_rows": covered_rows,
                     "covered_columns": covered_columns,
                     "total_covered": total_covered,
