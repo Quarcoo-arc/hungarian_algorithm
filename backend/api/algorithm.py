@@ -60,7 +60,7 @@ class Hungarian:
                 print("Converting profit matrix to cost matrix")
                 my_matrix = self.make_cost_matrix(my_matrix)
 
-            self._cost_matrix = my_matrix
+            self._cost_matrix = my_matrix.copy()
             self._size = len(my_matrix)
             self._shape = my_matrix.shape
             self._iterations = []
